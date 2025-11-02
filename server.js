@@ -64,7 +64,7 @@ async function sendOtpEmail(email, otp) {
   await transporter.sendMail({
    from: `"JU MKS ERP System" <${process.env.SMTP_USER}>`,
 to: email,
-subject: "🔒 Your One-Time Password (OTP) for Registration",
+subject: "Your One-Time Password (OTP) for Registration",
 html: `
   <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f8; padding: 25px;">
     <div style="max-width: 520px; margin: 0 auto; background-color: #ffffff; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.08); padding: 30px;">
