@@ -11,20 +11,29 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-// ✅ --- CORS CONFIG (fixed for Vercel + HTTPS + OPTIONS preflight)
-app.use(
-  cors({
-    origin: [
-      "https://makerspace-portal.vercel.app", // production frontend
-      "http://localhost:5173",               // local dev (optional)
-    ],
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+// ✅ Universal HTTPS-safe CORS middleware (works on Vercel)
+app.use((req, res, next) => {
+  const allowedOrigins = [
+    "https://makerspace-portal.vercel.app",
+    "http://localhost:5173",
+  ];
+  const origin = req.headers.origin;
 
-// ✅ Handle preflight CORS requests for all routes
-app.options("*", cors());
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
+
+  if (req.method === "OPTIONS") {
+    // Respond to preflight immediately
+    return res.sendStatus(200);
+  }
+
+  next();
+});
+
 
 // --- Supabase Setup ---
 const supabase = createClient(
