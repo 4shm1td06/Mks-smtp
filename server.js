@@ -238,5 +238,6 @@ app.get("/api/approve/:id", async (req, res) => {
 });
 
 // --- Start Server (for local dev only) ---
-const PORT = process.env.PORT || 7049;
+// --- Start Server ---
+const PORT = process.env.PORT || 7049; // use Render's dynamic port in production
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
