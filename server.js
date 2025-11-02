@@ -10,16 +10,27 @@ dotenv.config();
 
 const app = express();
 app.use(express.json());
+
+// ✅ --- CORS CONFIG (fixed for Vercel + HTTPS + OPTIONS preflight)
 app.use(
   cors({
-    origin: ["http://makerspace-portal.vercel.app"], // update for production
+    origin: [
+      "https://makerspace-portal.vercel.app", // production frontend
+      "http://localhost:5173",               // local dev (optional)
+    ],
     methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
+// ✅ Handle preflight CORS requests for all routes
+app.options("*", cors());
+
 // --- Supabase Setup ---
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
+);
 
 // --- Nodemailer SMTP ---
 const smtpPort = Number(process.env.SMTP_PORT || 465);
@@ -64,7 +75,7 @@ async function sendOtpEmail(email, otp) {
 
 // --- Utility: Send Admin Approval Email ---
 async function sendApprovalEmail(email, approvalId) {
-  const baseUrl = process.env.API_BASE_URL || "http://localhost:7049";
+  const baseUrl = process.env.API_BASE_URL || "https://mks-smtp.vercel.app";
   const approveLink = `${baseUrl}/api/approve/${approvalId}?action=approve`;
   const rejectLink = `${baseUrl}/api/approve/${approvalId}?action=reject`;
 
@@ -148,7 +159,11 @@ app.post("/api/request-registration", async (req, res) => {
 
       await sendOtpEmail(email, otp);
 
-      console.log(`OTP generated for ${email}: ${otp} (expires ${new Date(expiresAt).toISOString()})`);
+      console.log(
+        `OTP generated for ${email}: ${otp} (expires ${new Date(
+          expiresAt
+        ).toISOString()})`
+      );
       return res.json({ otpSent: true });
     } else {
       // External user → requires approval
@@ -162,7 +177,9 @@ app.post("/api/request-registration", async (req, res) => {
     }
   } catch (error) {
     console.error("Error in /request-registration:", error);
-    return res.status(500).json({ error: "Failed to process registration request." });
+    return res
+      .status(500)
+      .json({ error: "Failed to process registration request." });
   }
 });
 
@@ -198,7 +215,9 @@ app.post("/api/verify-otp", async (req, res) => {
     return res.json({ success: true, message: "User created successfully!" });
   } catch (err) {
     console.error("Error in /verify-otp:", err);
-    return res.status(500).json({ error: "Server error during OTP verification" });
+    return res
+      .status(500)
+      .json({ error: "Server error during OTP verification" });
   }
 });
 
