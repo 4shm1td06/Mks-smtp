@@ -100,7 +100,7 @@ html: `
       <br>
       <p style="font-size: 13px; color: #888; text-align: center;">
         — JU MKS ERP Support Team <br>
-        <a href="mailto:support@ju.edu.in" style="color:#003366; text-decoration:none;">support@ju.edu.in</a>
+        <a href="mailto:erp.makerspace@gmail.com" style="color:#003366; text-decoration:none;">erp.makerspace@gmail.com</a>
       </p>
     </div>
   </div>
