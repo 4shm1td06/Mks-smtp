@@ -80,7 +80,7 @@ async function sendApprovalEmail(email, approvalId) {
   const rejectLink = `${baseUrl}/api/approve/${approvalId}?action=reject`;
 
   await transporter.sendMail({
-    from: `"JECRC ERP System" <${process.env.SMTP_USER}>`,
+    from: `"JU MKS ERP System" <${process.env.SMTP_USER}>`,
     to: "erp.makerspace@gmail.com",
     subject: "New Registration Request Pending Approval",
     html: `
@@ -99,7 +99,7 @@ async function sendApprovalEmail(email, approvalId) {
 
 async function sendApprovalSuccessEmail(email) {
   await transporter.sendMail({
-    from: `"JECRC ERP System" <${process.env.SMTP_USER}>`,
+    from: `"JU MKS ERP System" <${process.env.SMTP_USER}>`,
     to: email,
     subject: "Your ERP Access Request Has Been Approved 🎉",
     html: `
