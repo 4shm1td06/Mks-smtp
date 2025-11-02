@@ -9,27 +9,23 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-// ✅ VERCEL-FRIENDLY CORS MIDDLEWARE (handles all preflights)
+// ✅ Vercel-friendly CORS
 app.use((req, res, next) => {
   const allowedOrigins = [
     "https://makerspace-portal.vercel.app",
     "http://localhost:5173",
   ];
   const origin = req.headers.origin;
-
   if (allowedOrigins.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
   }
-
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-  // Prevents CORS preflight errors on Vercel
   if (req.method === "OPTIONS") {
     res.status(200).end();
     return;
   }
-
   next();
 });
 
@@ -42,7 +38,7 @@ const supabase = createClient(
 // --- Nodemailer SMTP ---
 const smtpPort = Number(process.env.SMTP_PORT || 465);
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
+  host: process.env.SMTP_HOST || "smtp.gmail.com",
   port: smtpPort,
   secure: smtpPort === 465,
   auth: {
@@ -51,11 +47,11 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// --- Temporary Stores ---
+// --- Temporary Stores (for OTP & Approvals) ---
 const otpStore = new Map();
 const pendingApprovals = new Map();
 
-// --- Cleanup expired OTPs ---
+// --- Cleanup expired OTPs every 60s ---
 setInterval(() => {
   const now = Date.now();
   for (const [email, record] of otpStore.entries()) {
@@ -109,19 +105,14 @@ async function sendApprovalSuccessEmail(email) {
     html: `
       <div style="font-family:sans-serif;">
         <h2>Welcome to JU MakerSpace ERP</h2>
-        <p>Dear User,</p>
         <p>Your authentication request has been <strong>approved</strong> by the admin.</p>
-        <p>You can now access the ERP using the credentials you set during registration.</p>
+        <p>You can now access the ERP using your credentials.</p>
         <p>
           <a href="https://makerspace-portal.vercel.app" 
-             style="background:#2563eb;color:white;padding:10px 15px;
-                    text-decoration:none;border-radius:6px;display:inline-block;">
+             style="background:#2563eb;color:white;padding:10px 15px;text-decoration:none;border-radius:6px;display:inline-block;">
              Go to JU MKS ERP
           </a>
         </p>
-        <p>If you face any issues logging in, please contact the ERP support team.</p>
-        <br/>
-        <p>Best regards,<br/>JECRC ERP Team</p>
       </div>
     `,
   });
@@ -135,11 +126,8 @@ async function sendRejectionEmail(email) {
     html: `
       <div style="font-family:sans-serif;">
         <h2>JU Maker-Space ERP Registration Update</h2>
-        <p>Dear User,</p>
-        <p>We regret to inform you that your authentication request has been <strong>rejected</strong> by the admin.</p>
+        <p>Your authentication request has been <strong>rejected</strong> by the admin.</p>
         <p>If you believe this was a mistake, please contact the ERP support team.</p>
-        <br/>
-        <p>Best regards,<br/>JU Maker-Space ERP Team</p>
       </div>
     `,
   });
@@ -193,7 +181,6 @@ app.post("/api/verify-otp", async (req, res) => {
       password,
       email_confirm: true,
     });
-
     if (error) throw error;
 
     otpStore.delete(email);
@@ -204,12 +191,11 @@ app.post("/api/verify-otp", async (req, res) => {
   }
 });
 
-// --- Admin Approval ---
+// --- Admin Approval Links ---
 app.get("/api/approve/:id", async (req, res) => {
   const { id } = req.params;
   const { action } = req.query;
   const pending = pendingApprovals.get(id);
-
   if (!pending) return res.send("<h3>Invalid or expired approval link.</h3>");
 
   const { email, password } = pending;
@@ -221,8 +207,8 @@ app.get("/api/approve/:id", async (req, res) => {
         password,
         email_confirm: true,
       });
-
       if (error) throw error;
+
       await sendApprovalSuccessEmail(email);
       pendingApprovals.delete(id);
       return res.send(`<h3>✅ ${email} approved successfully!</h3>`);
@@ -237,7 +223,11 @@ app.get("/api/approve/:id", async (req, res) => {
   }
 });
 
-// --- Start Server (for local dev only) ---
-// --- Start Server ---
-const PORT = process.env.PORT || 7049; // use Render's dynamic port in production
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+// ✅ Export for Vercel serverless
+export default app;
+
+// ✅ Local dev (optional)
+if (process.env.NODE_ENV !== "production") {
+  const PORT = process.env.PORT || 7049;
+  app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+}
