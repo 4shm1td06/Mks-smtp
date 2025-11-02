@@ -62,17 +62,52 @@ setInterval(() => {
 // --- Email Utilities ---
 async function sendOtpEmail(email, otp) {
   await transporter.sendMail({
-    from: `"JECRC ERP" <${process.env.SMTP_USER}>`,
-    to: email,
-    subject: "Your OTP for Registration",
-    html: `
-      <div style="font-family:sans-serif;">
-        <h3>Your OTP is: <strong>${otp}</strong></h3>
-        <p>This OTP is valid for 5 minutes.</p>
+   from: `"JU MKS ERP System" <${process.env.SMTP_USER}>`,
+to: email,
+subject: "🔒 Your One-Time Password (OTP) for Registration",
+html: `
+  <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f8; padding: 25px;">
+    <div style="max-width: 520px; margin: 0 auto; background-color: #ffffff; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.08); padding: 30px;">
+      
+      <!-- Logo Header -->
+      <div style="text-align: center; margin-bottom: 15px;">
+        <img src="https://jecrcuniversity.edu.in/wp-content/uploads/2023/02/JUMAKERSPACE-1.webp" 
+             alt="JU Logo" width="80" height="80" style="border-radius: 8px; margin-bottom: 10px;">
+        <h2 style="color: #003366; margin: 0;">JU MKS ERP System</h2>
       </div>
-    `,
+
+      <hr style="border: none; border-top: 2px solid #003366; width: 60px; margin: 20px auto;">
+
+      <p style="font-size: 16px; color: #333;">Dear User,</p>
+      <p style="font-size: 15px; color: #333;">
+        Thank you for registering with the <strong>JU MKS ERP System</strong>.<br>
+        Please use the One-Time Password (OTP) below to verify your email address:
+      </p>
+
+      <div style="text-align: center; margin: 25px 0;">
+        <span style="display: inline-block; background-color: #003366; color: #ffffff; padding: 12px 30px; border-radius: 6px; font-size: 26px; font-weight: bold; letter-spacing: 2px;">
+          ${otp}
+        </span>
+      </div>
+
+      <p style="font-size: 14px; color: #555;">
+        This OTP is valid for <strong>5 minutes</strong>.  
+        Please do not share it with anyone to ensure your account’s security.
+      </p>
+
+      <p style="font-size: 14px; color: #555;">If you did not request this verification, please ignore this email.</p>
+
+      <br>
+      <p style="font-size: 13px; color: #888; text-align: center;">
+        — JU MKS ERP Support Team <br>
+        <a href="mailto:support@ju.edu.in" style="color:#003366; text-decoration:none;">support@ju.edu.in</a>
+      </p>
+    </div>
+  </div>
+`,
   });
 }
+
 
 async function sendApprovalEmail(email, approvalId) {
   const baseUrl = process.env.API_BASE_URL || "https://mks-smtp.vercel.app";

@@ -1,21 +1,16 @@
 {
   "name": "smtp-server",
   "version": "1.0.0",
-  "description": "SMTP and registration service for JECRC ERP",
   "main": "server.js",
   "type": "module",
-  "scripts": {
-    "start": "node server.js"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "@supabase/supabase-js": "^2.78.0",
-    "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "nodemailer": "^7.0.10",
     "uuid": "^13.0.0"
+  },
+  "scripts": {
+    "start": "node server.js"
   }
 }
