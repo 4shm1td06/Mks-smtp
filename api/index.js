@@ -3,13 +3,14 @@ import nodemailer from "nodemailer";
 import { createClient } from "@supabase/supabase-js";
 import { v4 as uuidv4 } from "uuid";
 import dotenv from "dotenv";
+import { createServerlessExpress } from "@vercel/node";
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
 
-// ✅ VERCEL-FRIENDLY CORS MIDDLEWARE (handles all preflights)
+// --- CORS ---
 app.use((req, res, next) => {
   const allowedOrigins = [
     "https://makerspace-portal.vercel.app",
@@ -24,7 +25,6 @@ app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-  // Prevents CORS preflight errors on Vercel
   if (req.method === "OPTIONS") {
     res.status(200).end();
     return;
@@ -33,13 +33,13 @@ app.use((req, res, next) => {
   next();
 });
 
-// --- Supabase Setup ---
+// --- Supabase ---
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY
 );
 
-// --- Nodemailer SMTP ---
+// --- SMTP setup ---
 const smtpPort = Number(process.env.SMTP_PORT || 465);
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -51,7 +51,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// --- Temporary Stores ---
+// --- In-memory stores ---
 const otpStore = new Map();
 const pendingApprovals = new Map();
 
@@ -111,17 +111,12 @@ async function sendApprovalSuccessEmail(email) {
         <h2>Welcome to JU MakerSpace ERP</h2>
         <p>Dear User,</p>
         <p>Your authentication request has been <strong>approved</strong> by the admin.</p>
-        <p>You can now access the ERP using the credentials you set during registration.</p>
         <p>
-          <a href="https://makerspace-portal.vercel.app" 
-             style="background:#2563eb;color:white;padding:10px 15px;
-                    text-decoration:none;border-radius:6px;display:inline-block;">
+          <a href="https://makerspace-portal.vercel.app"
+             style="background:#2563eb;color:white;padding:10px 15px;text-decoration:none;border-radius:6px;display:inline-block;">
              Go to JU MKS ERP
           </a>
         </p>
-        <p>If you face any issues logging in, please contact the ERP support team.</p>
-        <br/>
-        <p>Best regards,<br/>JECRC ERP Team</p>
       </div>
     `,
   });
@@ -135,17 +130,13 @@ async function sendRejectionEmail(email) {
     html: `
       <div style="font-family:sans-serif;">
         <h2>JU Maker-Space ERP Registration Update</h2>
-        <p>Dear User,</p>
-        <p>We regret to inform you that your authentication request has been <strong>rejected</strong> by the admin.</p>
-        <p>If you believe this was a mistake, please contact the ERP support team.</p>
-        <br/>
-        <p>Best regards,<br/>JU Maker-Space ERP Team</p>
+        <p>Your registration request has been <strong>rejected</strong> by the admin.</p>
       </div>
     `,
   });
 }
 
-// --- Request Registration ---
+// --- Registration Flow ---
 app.post("/api/request-registration", async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password)
@@ -195,7 +186,6 @@ app.post("/api/verify-otp", async (req, res) => {
     });
 
     if (error) throw error;
-
     otpStore.delete(email);
     res.json({ success: true });
   } catch (err) {
@@ -237,6 +227,5 @@ app.get("/api/approve/:id", async (req, res) => {
   }
 });
 
-// --- Start Server (for local dev only) ---
-const PORT = process.env.PORT || 7049;
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+// --- Export for Vercel ---
+export default createServerlessExpress(app);
